@@ -3,197 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MozChats - Chat em Tempo Real</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>MozChats - Chat Rooms</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        .chat-bubble { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a0033 50%, #0f0f23 100%);
+            color: white; 
+            min-height: 100vh; 
+            overflow: hidden;
+        }
+        .container { max-width: 1400px; margin: 0 auto; height: calc(100vh - 80px); display: flex; flex-direction: column; }
+        @media (min-width: 1024px) { .container { flex-direction: row; } }
+        
+        /* Header */
+        header { 
+            background: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(168,85,247,0.3); 
+            padding: 1rem; 
+            position: sticky; 
+            top: 0; z-index: 50;
+        }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo h1 { 
+            font-size: 1.75rem; font-weight: 800; 
+            background: linear-gradient(135deg, #a855f7, #ec4899); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            background-clip: text;
+        }
+        .theme-toggle { 
+            padding: 0.5rem; border-radius: 1rem; 
+            background: rgba(0,0,0,0.4); 
+            border: 1px solid rgba(168,85,247,0.3);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .theme-toggle:hover { background: rgba(0,0,0,0.6); }
+        .status-dot { width: 0.5rem; height: 0.5rem; background: #10b981; border-radius: 50%; animation: pulse 3s infinite; }
+        
+        /* Sidebar */
+        .sidebar { 
+            width: 100%; height: 300px; 
+            background: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(10px); 
+            border-right: 1px solid rgba(168,85,247,0.2); 
+            padding: 1.5rem; 
+            overflow-y: auto;
+        }
+        @media (min-width: 1024px) { 
+            .sidebar { width: 16rem; height: auto; } 
+            .main-content { flex: 1; display: flex; flex-direction: column; }
+        }
+        .sidebar h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(168,85,247,0.3); }
+        .room-btn { 
+            width: 100%; display: flex; align-items: center; gap: 0.75rem; 
+            padding: 0.75rem; border-radius: 1rem; 
+            background: rgba(168,85,247,0.2); 
+            border: 1px solid rgba(168,85,247,0.3);
+            transition: all 0.2s; font-weight: 500;
+        }
+        .room-btn:hover { background: rgba(168,85,247,0.4); transform: translateX(4px); }
+        .room-active { background: rgba(168,85,247,0.5) !important; box-shadow: 0 0 20px rgba(168,85,247,0.3); }
+        .room-dot { width: 0.75rem; height: 0.75rem; background: #10b981; border-radius: 50%; }
+        .room-count { margin-left: auto; font-size: 0.875rem; opacity: 0.75; }
+        
+        /* Messages */
+        .messages-container { 
+            flex: 1; padding: 1.5rem; 
+            background: rgba(0,0,0,0.2); 
+            backdrop-filter: blur(10px); 
+            overflow-y: auto;
+        }
+        .welcome-screen { 
+            height: 100%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; gap: 1rem; 
+            opacity: 1; transition: opacity 0.3s;
+        }
+        .welcome-icon { 
+            width: 6rem; height: 6rem; 
+            background: linear-gradient(135deg, #a855f7, #ec4899); 
+            border-radius: 1.5rem; display: flex; align-items: center; justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        .welcome-icon::before { content: "💬"; font-size: 2.5rem; }
+        
+        /* Input */
+        .input-area { 
+            padding: 1.5rem; 
+            background: rgba(0,0,0,0.5); 
+            backdrop-filter: blur(20px); 
+            border-top: 1px solid rgba(168,85,247,0.2);
+        }
+        .input-container { max-width: 56rem; margin: 0 auto; }
+        .message-input { 
+            display: flex; gap: 0.75rem;
+        }
+        #messageInput { 
+            flex: 1; background: rgba(0,0,0,0.6); 
+            border: 1px solid rgba(168,85,247,0.4); 
+            border-radius: 1.5rem; padding: 0.75rem 1.25rem; 
+            color: white; font-size: 1rem;
+            transition: all 0.2s;
+        }
+        #messageInput::placeholder { color: #9ca3af; }
+        #messageInput:focus { outline: none; border-color: #a855f7; box-shadow: 0 0 20px rgba(168,85,247,0.3); }
+        #sendBtn { 
+            background: linear-gradient(135deg, #a855f7, #ec4899); 
+            color: white; padding: 0.75rem 2rem; 
+            border-radius: 1.5rem; font-weight: 600; 
+            border: none; cursor: pointer; 
+            transition: all 0.2s; box-shadow: 0 10px 30px rgba(168,85,247,0.4);
+        }
+        #sendBtn:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(168,85,247,0.6); }
+        
+        /* Message Bubble */
+        .message-bubble { 
+            animation: slideIn 0.4s ease-out; 
+            opacity: 0; transform: translateX(20px);
+        }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        .msg-container { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .msg-avatar { 
+            width: 2.5rem; height: 2.5rem; 
+            background: linear-gradient(135deg, #a855f7, #ec4899); 
+            border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; 
+            font-weight: 700; font-size: 0.875rem; flex-shrink: 0;
+        }
+        .msg-content { flex: 1; min-width: 0; }
+        .msg-header { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.25rem; }
+        .msg-user { font-weight: 600; color: #c084fc; font-size: 0.875rem; }
+        .msg-time { font-size: 0.75rem; color: #9ca3af; }
+        .msg-text { 
+            background: rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px); 
+            border-radius: 1rem; 
+            padding: 0.75rem 1rem; 
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        .msg-text:hover { background: rgba(255,255,255,0.15); }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .fade-out { opacity: 0 !important; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen">
-    <div class="max-w-4xl mx-auto p-6">
-        <!-- Header -->
-        <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-8 mb-8">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-comments text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                            MozChats
-                        </h1>
-                        <p class="text-gray-600">Chat em tempo real • Anônimo • Seguro</p>
-                    </div>
-                </div>
-                <div class="flex space-x-2">
-                    <button id="themeToggle" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all">
-                        <i class="fas fa-moon text-gray-600"></i>
-                    </div>
-                </div>
+<body>
+    <header>
+        <div class="header-content max-w-6xl mx-auto">
+            <div class="logo">
+                <div style="width:1.5rem;height:1.5rem;background:linear-gradient(135deg,#a855f7,#ec4899);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;font-size:1rem;">💬</div>
+                <h1>MozChats</h1>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+                <button id="themeToggle" class="theme-toggle" title="Alternar tema">🌙</button>
+                <div class="status-dot"></div>
             </div>
         </div>
+    </header>
 
-        <div class="grid lg:grid-cols-3 gap-6">
-            <!-- Chat Rooms -->
-            <div class="lg:col-span-1">
-                <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-6 h-[500px]">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center"><i class="fas fa-list mr-2 text-indigo-500"></i>Salas</h2>
-                    <div id="roomsList" class="space-y-2 max-h-[400px] overflow-y-auto">
-                        <div class="room-item p-3 bg-indigo-50 rounded-xl cursor-pointer hover:bg-indigo-100 transition-all flex items-center space-x-3" data-room="geral">
-                            <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-semibold">#geral</div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-900 truncate">#geral</p>
-                                <p class="text-sm text-gray-500">245 online</p>
-                            </div>
-                            <div class="w-6 h-6 bg-green-500 rounded-full"></div>
-                        </div>
-                        <div class="room-item p-3 bg-purple-50 rounded-xl cursor-pointer hover:bg-purple-100 transition-all flex items-center space-x-3" data-room="crypto">
-                            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white font-semibold">#crypto</div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-900 truncate">#crypto</p>
-                                <p class="text-sm text-gray-500">89 online</p>
-                            </div>
-                            <div class="w-6 h-6 bg-green-400 rounded-full"></div>
-                        </div>
-                        <div class="room-item p-3 bg-emerald-50 rounded-xl cursor-pointer hover:bg-emerald-100 transition-all flex items-center space-x-3" data-room="tech">
-                            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-semibold">#tech</div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-900 truncate">#tech</p>
-                                <p class="text-sm text-gray-500">156 online</p>
-                            </div>
-                            <div class="w-6 h-6 bg-green-500 rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chat Principal -->
-            <div class="lg:col-span-2">
-                <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 h-[500px] flex flex-col">
-                    <!-- Chat Header -->
-                    <div class="p-6 border-b border-gray-100">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold">#geral</div>
-                            <div>
-                                <p class="font-semibold text-gray-900">Sala Geral</p>
-                                <p class="text-sm text-gray-500">245 membros online</p>
-                            </div>
-                            <div class="ml-auto flex space-x-2">
-                                <button class="p-2 text-gray-500 hover:text-indigo-500 transition-all"><i class="fas fa-user-plus"></i></button>
-                                <button class="p-2 text-gray-500 hover:text-indigo-500 transition-all"><i class="fas fa-volume-mute"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mensagens -->
-                    <div id="messagesContainer" class="flex-1 p-6 overflow-y-auto space-y-4 bg-gradient-to-b from-white to-gray-50">
-                        <div class="chat-bubble flex space-x-3">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm">JP</div>
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-1">
-                                    <span class="font-semibold text-gray-900 text-sm">João P.</span>
-                                    <span class="text-xs text-gray-500">• agora</span>
-                                </div>
-                                <p class="text-gray-800">Bem-vindo ao MozChats! 🚀<br>Chat anônimo e em tempo real.</p>
-                            </div>
-                        </div>
-                        <!-- Mais mensagens serão adicionadas via JS -->
-                    </div>
-
-                    <!-- Input -->
-                    <div class="p-6 border-t border-gray-100">
-                        <div class="flex space-x-3">
-                            <div class="flex-1 relative">
-                                <input id="messageInput" type="text" placeholder="Digite sua mensagem..." 
-                                       class="w-full p-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none transition-all bg-white/50 backdrop-blur-sm">
-                                <button id="emojiBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-500 transition-all">
-                                    <i class="fas fa-face-smile text-xl"></i>
-                                </button>
-                            </div>
-                            <button id="sendBtn" class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Salas</h2>
+            <button class="room-btn room-active" data-room="geral">
+                <div class="room-dot"></div>
+                <span>#geral</span>
+                <span class="room-count">(42)</span>
+            </button>
+            <button class="room-btn" data-room="crypto">
+                <span>₿</span>
+                <span>#crypto</span>
+                <span class="room-count">(127)</span>
+            </button>
+            <button class="room-btn" data-room="tech">
+                <span>💻</span>
+                <span>#tech</span>
+                <span class="room-count">(89)</span>
+            </button>
         </div>
 
-        <!-- Status Online -->
-        <div class="mt-8 p-6 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/50">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-green-500 rounded-full"></div>
-                    <span class="font-semibold text-gray-900">Online agora</span>
+        <div class="main-content">
+            <div id="messagesContainer" class="messages-container">
+                <div id="welcomeScreen" class="welcome-screen">
+                    <div class="welcome-icon"></div>
+                    <h2>Bem-vindo ao MozChats!</h2>
+                    <p style="max-width:28rem;color:#9ca3af;">Selecione uma sala para começar a conversar. Mensagens ficam salvas no navegador.</p>
                 </div>
-                <div class="text-sm text-gray-500">245 pessoas</div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="message-input">
+                        <input id="messageInput" type="text" placeholder="Digite sua mensagem... (Enter para enviar)" autocomplete="off">
+                        <button id="sendBtn">➤ Enviar</button>
+                    </div>
+                    <div style="text-align:center;margin-top:0.5rem;font-size:0.75rem;color:#9ca3af;">
+                        Enter para enviar • Shift+Enter para nova linha
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Chat Functionality
-        const roomsList = document.querySelectorAll('.room-item');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const currentRoom = document.querySelector('.room-item[data-room="geral"]');
+        class MozChats {
+            constructor() {
+                this.currentRoom = 'geral';
+                this.messages = JSON.parse(localStorage.getItem('mozchats-messages') || '{}');
+                this.init();
+            }
 
-        // Select room
-        roomsList.forEach(room => {
-            room.addEventListener('click', () => {
-                roomsList.forEach(r => r.classList.remove('bg-indigo-100', 'ring-2', 'ring-indigo-500'));
-                room.classList.add('bg-indigo-100', 'ring-2', 'ring-indigo-500');
-            });
-        });
+            init() {
+                this.bindEvents();
+                this.loadRoom('geral');
+            }
 
-        // Send message
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text) return;
+            bindEvents() {
+                document.querySelectorAll('.room-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('room-active'));
+                        e.currentTarget.classList.add('room-active');
+                        this.currentRoom = e.currentTarget.dataset.room;
+                        this.loadRoom(this.currentRoom);
+                    });
+                });
 
-            // Add message to chat
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-bubble flex space-x-3';
-            messageDiv.innerHTML = `
-                <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm">EU</div>
-                <div class="flex-1">
-                    <div class="flex items-center space-x-2 mb-1">
-                        <span class="font-semibold text-gray-900 text-sm">Você</span>
-                        <span class="text-xs text-gray-500">• agora</span>
+                const sendBtn = document.getElementById('sendBtn');
+                const input = document.getElementById('messageInput');
+                
+                sendBtn.onclick = () => this.sendMessage();
+                input.onkeypress = (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                };
+
+                document.getElementById('themeToggle').onclick = () => {
+                    document.body.classList.toggle('light');
+                    localStorage.setItem('mozchats-theme', document.body.classList.contains('light') ? 'light' : 'dark');
+                };
+
+                if (localStorage.getItem('mozchats-theme') === 'light') {
+                    document.body.classList.add('light');
+                    document.getElementById('themeToggle').textContent = '☀️';
+                }
+            }
+
+            loadRoom(room) {
+                this.currentRoom = room;
+                const roomMessages = this.messages[room] || [];
+                const container = document.getElementById('messagesContainer');
+                const welcomeScreen = document.getElementById('welcomeScreen');
+
+                if (roomMessages.length === 0) {
+                    welcomeScreen.classList.remove('fade-out');
+                    return;
+                }
+
+                welcomeScreen.classList.add('fade-out');
+                setTimeout(() => {
+                    container.innerHTML = roomMessages.map(msg => this.formatMessage(msg)).join('') + 
+                        '<div style="height:1rem;"></div>';
+                    container.scrollTop = container.scrollHeight;
+                }, 200);
+            }
+
+            sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                if (!text) return;
+
+                const message = {
+                    id: Date.now(),
+                    text: text.replace(/\n/g, '<br>'),
+                    timestamp: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                    user: ['MozUser', 'CryptoFan', 'TechNerd', 'TraderX', 'DevMaster', 'AnonChat'][Math.floor(Math.random() * 6)]
+                };
+
+                if (!this.messages[this.currentRoom]) this.messages[this.currentRoom] = [];
+                this.messages[this.currentRoom].push(message);
+                localStorage.setItem('mozchats-messages', JSON.stringify(this.messages));
+
+                input.value = '';
+                this.appendMessage(message);
+            }
+
+            appendMessage(message) {
+                const container = document.getElementById('messagesContainer');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'msg-container message-bubble';
+                msgEl.innerHTML = this.formatMessage(message);
+                container.appendChild(msgEl);
+                container.scrollTop = container.scrollHeight;
+            }
+
+            formatMessage(msg) {
+                return `
+                    <div class="msg-container">
+                        <div class="msg-avatar">${msg.user.charAt(0)}</div>
+                        <div class="msg-content">
+                            <div class="msg-header">
+                                <span class="msg-user">${msg.user}</span>
+                                <span class="msg-time">${msg.timestamp}</span>
+                            </div>
+                            <div class="msg-text">${msg.text}</div>
+                        </div>
                     </div>
-                    <p class="text-gray-800">${text}</p>
-                </div>
-            `;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-            messageInput.value = '';
+                `;
+            }
         }
 
-        sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        // Auto-scroll
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-        // Theme toggle
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark');
-        });
-
-        // Simulate online users
-        setInterval(() => {
-            const users = ['Ana S.', 'Pedro M.', 'Lucas R.', 'Maria F.', 'João V.'];
-            const randomUser = users[Math.floor(Math.random() * users.length)];
-            console.log(`${randomUser} entrou na sala`);
-        }, 10000);
+        new MozChats();
     </script>
 </body>
 </html>
